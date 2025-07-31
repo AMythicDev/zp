@@ -154,7 +154,7 @@ def nain(
             sel = os.path.basename(os.getcwd())
             if sel not in zp.projects:
                 zp.new(sel, True, True)
-                return
+                raise typer.Exit()
         else:
             fzfsel = subprocess.run(
                 ["fzf", "--layout", "reverse-list"],
