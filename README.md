@@ -2,7 +2,8 @@
 An highly opinionated projects manager
 
 `zp` lets you create and manage projects. It works by maintaining a global project directory which hosts
-all your projects. It also integrates with [fzf]() for quickly selecting projects, [Zellij]() to provide multiplexing support and workspace
+all your projects. It also integrates with [fzf](https://github.com/junegunn/fzf) for quickly selecting projects,
+[Zellij](https://zellij.dev/) to provide multiplexing support and workspace
 persistence and git to easily import external repositories.
 
 `zp` works for only certain set of people:
@@ -91,5 +92,5 @@ instead of the `zellij.py` file. Use the `zellij.py` for an example.
 ## Contributing
 Don'd send PRs unless its a bug or feature that everyone can benefit from.
 
-All contributions are under the BSD 3 Clause license. See the [LICENSE] file.
+All contributions are under the BSD 3 Clause license. See the [LICENSE](./LICENSE) file.
 
