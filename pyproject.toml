@@ -1,0 +1,17 @@
+[project]
+name = "zp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "appdirs>=1.4.4",
+    "typer>=0.16.0",
+]
+
+[project.scripts]
+zp = "main:app"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
