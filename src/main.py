@@ -136,9 +136,9 @@ def nain(
         typer.Option(
             "--fzf",
             "-f",
-            help="Start fzf if no project name is given. This option is deprecated and is present only for historical reasons.",
+            help="Start fzf if no project name is given or zp is called inside project directory.",
         ),
-    ] = True,
+    ] = False,
     dir: Annotated[
         bool,
         typer.Option(
@@ -150,12 +150,13 @@ def nain(
 ):
     if ctx.invoked_subcommand is None:
         zp = Zp()
+        dirname = os.path.basename(os.getcwd())
+        sel = None
         if dir:
-            sel = os.path.basename(os.getcwd())
-            if sel not in zp.projects:
-                zp.new(sel, True, True)
+            if dirname not in zp.projects:
+                zp.new(dirname, True, True)
                 raise typer.Exit()
-        else:
+        elif fzf or dirname not in zp.projects:
             fzfsel = subprocess.run(
                 ["fzf", "--layout", "reverse-list"],
                 input="\n".join(zp.projects),
@@ -163,8 +164,10 @@ def nain(
                 capture_output=True,
             )
             sel = fzfsel.stdout[:-1].strip()
+        elif dirname in zp.projects:
+            sel = dirname
 
-        if len(sel) != 0:
+        if sel is not None:
             switch_session(sel)
 
 

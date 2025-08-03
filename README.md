@@ -31,7 +31,11 @@ Only one: type as less as possible in the terminal for project related tasks, le
   but can be overriden by the `ZP_PROJECTS_DIR` enviroment variable
 
 ## Installation
-Maybe later
+1. Clone thw repo
+2. Run
+```sh
+pip install .
+```
 
 ## Docs
 ### Create a new project
@@ -44,7 +48,8 @@ This will create a new directory under your global projects directory and start 
 ```sh
 zp
 ```
-Opens fzf and let's you select and switch to a project
+Opens fzf and lets you select and switch to a project.
+If executed inside an already registered project, will immediately run Zellij inside that directory. To force use the fuzzy finder rather than switching instantly, use the `-f` flag
 
 ### Open project by name
 ```sh
