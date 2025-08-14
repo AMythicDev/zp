@@ -7,6 +7,7 @@ from zellij import switch_session, delete_session
 import shutil
 from urllib.parse import urlparse
 from typing import Annotated
+import sys
 
 APPNAME = "zp"
 APPAUTHOR = "AMythicDev"
@@ -114,8 +115,16 @@ def importp(origin: str, switch: bool = True):
     elif origin.startswith("http://") or origin.startswith("https://"):
         subprocess.run(["git", "clone", name])
         name = os.path.basename(urlparse(origin).path)
-    else:
+    elif os.path.isdir(zp.projects_dir + "/" + name):
         name = origin
+    else:
+        print(
+            f"cannot import {
+                origin
+            }: origin not a valid url or a valid directory under projects directory",
+            file=sys.stderr,
+        )
+        raise typer.Exit(code=1)
     zp.new(name, switch, True)
 
 
@@ -165,6 +174,8 @@ def nain(
                 text=True,
                 capture_output=True,
             )
+            if fzfsel is None:
+                raise typer.Abort()
             sel = fzfsel.stdout[:-1].strip()
         elif dirname in zp.projects:
             sel = dirname
