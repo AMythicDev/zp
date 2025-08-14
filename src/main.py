@@ -115,7 +115,7 @@ def importp(origin: str, switch: bool = True):
     elif origin.startswith("http://") or origin.startswith("https://"):
         subprocess.run(["git", "clone", name])
         name = os.path.basename(urlparse(origin).path)
-    elif os.path.isdir(zp.projects_dir + "/" + name):
+    elif os.path.isdir(zp.projects_dir + "/" + origin):
         name = origin
     else:
         print(
