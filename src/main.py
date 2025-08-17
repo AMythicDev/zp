@@ -75,7 +75,7 @@ app = typer.Typer()
 @app.command()
 def new(name: str, switch: bool = True):
     zp = Zp()
-    zp.new(name, switch)
+    zp.new(name, switch, False)
 
 
 @app.command()
