@@ -8,57 +8,66 @@ import shutil
 from urllib.parse import urlparse
 from typing import Annotated
 import sys
+from pathlib import Path, PurePath
 
 APPNAME = "zp"
 APPAUTHOR = "AMythicDev"
 
 
 class Zp:
-    projects_dir: str
-    data_dir: str
-    projfile: str
-    projects: set[str]
+    projects_dir: Path
+    data_dir: Path
+    projfile: Path
+    projects: dict[str, str] = {}
 
     def __init__(self) -> None:
-        self.projects_dir = os.environ.get(
-            "ZP_PROJECTS_DIR", os.path.expanduser("~/projects")
+        self.projects_dir = Path(
+            os.environ.get("ZP_PROJECTS_DIR", os.path.expanduser("~/projects"))
         )
-        self.data_dir = user_data_dir(APPNAME, APPAUTHOR)
-        self.projfile = self.data_dir + "/projects.json"
-        if not os.path.exists(self.data_dir):
+        self.data_dir = Path(user_data_dir(APPNAME, APPAUTHOR))
+        self.projfile = self.data_dir / "projects.json"
+        if not self.data_dir.exists():
             os.mkdir(self.data)
-        if not os.path.exists(self.projfile):
-            with open(self.projfile, "w") as f:
-                f.write("[]\n")
+        if not self.projfile.exists():
+            self._sync_projects()
 
         with open(self.projfile, "r") as f:
-            self.projects = set(json.load(f))
+            self.projects = json.load(f)
 
     def _sync_projects(self) -> None:
         with open(self.projfile, "w") as f:
-            json.dump(list(self.projects), f, indent=2)
+            json.dump(self.projects, f, indent=2)
 
-    def new(self, name: str, switch: bool, dir_exists: bool) -> None:
-        self.projects.add(name)
-
-        new_projdir = self.projects_dir + "/" + name
+    def new(
+        self,
+        path: Path,
+        out_of_projects_dir: bool,
+        switch: bool,
+        dir_exists: bool,
+    ) -> None:
+        if out_of_projects_dir:
+            new_projdir = path.resolve()
+        else:
+            new_projdir = self.projects_dir / path
 
         if not dir_exists:
-            if os.path.exists(new_projdir):
+            if new_projdir.exists():
                 raise FileExistsError(
                     f"error: project directory {new_projdir} already exists",
                 )
-            os.mkdir(new_projdir)
+            new_projdir.mkdir()
+
+        self.projects[new_projdir.name] = str(new_projdir)
 
         self._sync_projects()
 
         if switch:
             os.chdir(new_projdir)
-            switch_session(name)
+            switch_session(path.name)
 
     def delete(self, name: str, session: bool, dir: bool) -> None:
-        self.projects.remove(name)
-        del_projdir = self.projects_dir + "/" + name
+        del_projdir = self.projects[name]
+        del self.projects[name]
 
         if session:
             delete_session(name)
@@ -72,10 +81,16 @@ class Zp:
 app = typer.Typer()
 
 
+def is_path_like(text: str) -> bool:
+    return text.find("/") or text == "." or text == ".."
+
+
 @app.command()
-def new(name: str, switch: bool = True):
+def new(path: str, switch: bool = True):
     zp = Zp()
-    zp.new(name, switch, False)
+    out_of_projects_dir: bool = is_path_like(path)
+
+    zp.new(Path(path), out_of_projects_dir, switch, False)
 
 
 @app.command()
@@ -102,10 +117,11 @@ def rm(
     zp.delete(name, session, dir)
 
 
-@app.command("import")
+@app.command("im")
 def importp(origin: str, switch: bool = True):
     zp = Zp()
     os.chdir(zp.projects_dir)
+    out_of_projects_dir = False
     if origin.startswith("gh:"):
         subprocess.run(["git", "clone", f"git@github.com:{origin[3:]}"])
         name = os.path.basename(origin)
@@ -115,8 +131,11 @@ def importp(origin: str, switch: bool = True):
     elif origin.startswith("http://") or origin.startswith("https://"):
         subprocess.run(["git", "clone", name])
         name = os.path.basename(urlparse(origin).path)
-    elif os.path.isdir(zp.projects_dir + "/" + origin):
+    elif not is_path_like(origin) and os.path.isdir(zp.projects_dir / origin):
         name = origin
+    elif is_path_like(origin):
+        name = Path(origin).name
+        out_of_projects_dir = True
     else:
         print(
             f"cannot import {
@@ -125,7 +144,7 @@ def importp(origin: str, switch: bool = True):
             file=sys.stderr,
         )
         raise typer.Exit(code=1)
-    zp.new(name, switch, True)
+    zp.new(Path(name), out_of_projects_dir, switch, True)
 
 
 @app.command()
