@@ -8,7 +8,7 @@ import shutil
 from urllib.parse import urlparse
 from typing import Annotated
 import sys
-from pathlib import Path, PurePath
+from pathlib import Path
 
 APPNAME = "zp"
 APPAUTHOR = "AMythicDev"
@@ -120,21 +120,24 @@ def rm(
 @app.command("im")
 def importp(origin: str, switch: bool = True):
     zp = Zp()
-    os.chdir(zp.projects_dir)
     out_of_projects_dir = False
     if origin.startswith("gh:"):
+        os.chdir(zp.projects_dir)
         subprocess.run(["git", "clone", f"git@github.com:{origin[3:]}"])
         name = os.path.basename(origin)
     elif origin.startswith("gl:"):
+        os.chdir(zp.projects_dir)
         subprocess.run(["git", "clone", f"git@gitlab.com:{origin[3:]}"])
         name = os.path.basename(origin)
     elif origin.startswith("http://") or origin.startswith("https://"):
+        os.chdir(zp.projects_dir)
         subprocess.run(["git", "clone", name])
         name = os.path.basename(urlparse(origin).path)
     elif not is_path_like(origin) and os.path.isdir(zp.projects_dir / origin):
+        os.chdir(zp.projects_dir)
         name = origin
     elif is_path_like(origin):
-        name = Path(origin).name
+        name = Path(origin).resolve()
         out_of_projects_dir = True
     else:
         print(
@@ -193,7 +196,7 @@ def nain(
                 text=True,
                 capture_output=True,
             )
-            if fzfsel is None:
+            if len(fzfsel.stdout) == 0:
                 raise typer.Abort()
             sel = fzfsel.stdout[:-1].strip()
         elif dirname in zp.projects:
