@@ -82,7 +82,7 @@ app = typer.Typer()
 
 
 def is_path_like(text: str) -> bool:
-    return text.find("/") or text == "." or text == ".."
+    return text.find("/") != -1 or text == "." or text == ".."
 
 
 @app.command()
